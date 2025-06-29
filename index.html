@@ -1,0 +1,154 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      color: #aa8800;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 8px;
+      text-align: left;
+    }
+    th {
+      background-color: #f4f4f4;
+    }
+    .highlight {
+      background-color: #fffcc0;
+      font-weight: bold;
+    }
+    input[type="number"], input[type="text"] {
+      width: 100%;
+      padding: 4px;
+      box-sizing: border-box;
+    }
+  </style>
+</head>
+<body>
+
+<h2>3G Project Revenue Calculator</h2>
+
+<label for="revenue">Projected Revenue ($):</label>
+<input type="number" id="revenue" value="32000" oninput="calculateBreakdown()" />
+
+<br><br>
+
+<table id="contributionTable">
+  <thead>
+    <tr>
+      <th>Role</th>
+      <th>% Credit</th>
+      <th>Owner</th>
+      <th>Breakdown ($)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Generate the Lead</td>
+      <td><input type="number" value="25" onchange="calculateBreakdown()">%</td>
+      <td><input type="text" value="Owner A" onchange="calculateBreakdown()"></td>
+      <td class="breakdown"></td>
+    </tr>
+    <tr>
+      <td>Define & Scope</td>
+      <td><input type="number" value="10" onchange="calculateBreakdown()">%</td>
+      <td><input type="text" value="Owner B" onchange="calculateBreakdown()"></td>
+      <td class="breakdown"></td>
+    </tr>
+    <tr>
+      <td>Data Cleanup</td>
+      <td><input type="number" value="20" onchange="calculateBreakdown()">%</td>
+      <td><input type="text" value="Owner B" onchange="calculateBreakdown()"></td>
+      <td class="breakdown"></td>
+    </tr>
+    <tr>
+      <td>System Build</td>
+      <td><input type="number" value="15" onchange="calculateBreakdown()">%</td>
+      <td><input type="text" value="Split" onchange="calculateBreakdown()"></td>
+      <td class="breakdown"></td>
+    </tr>
+    <tr>
+      <td>Training & Launch</td>
+      <td><input type="number" value="20" onchange="calculateBreakdown()">%</td>
+      <td><input type="text" value="Owner A" onchange="calculateBreakdown()"></td>
+      <td class="breakdown"></td>
+    </tr>
+    <tr>
+      <td>Oversight</td>
+      <td><input type="number" value="10" onchange="calculateBreakdown()">%</td>
+      <td><input type="text" value="Owner B" onchange="calculateBreakdown()"></td>
+      <td class="breakdown"></td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>Owner Totals</h3>
+<table>
+  <thead>
+    <tr class="highlight">
+      <th>Person</th>
+      <th>Total ($)</th>
+    </tr>
+  </thead>
+  <tbody id="ownerTotals">
+  </tbody>
+</table>
+
+<script>
+function calculateBreakdown() {
+  const revenue = parseFloat(document.getElementById('revenue').value) || 0;
+  const rows = document.querySelectorAll('#contributionTable tbody tr');
+  const ownerSums = {};
+  let owners = [];
+
+  // Identify distinct owners (excluding 'split')
+  rows.forEach(row => {
+    const owner = row.cells[2].querySelector('input').value.trim();
+    const lower = owner.toLowerCase();
+    if (lower !== "split" && !owners.map(o => o.toLowerCase()).includes(lower)) {
+      owners.push(owner);
+    }
+  });
+
+  rows.forEach(row => {
+    const percentInput = row.cells[1].querySelector('input');
+    const ownerInput = row.cells[2].querySelector('input');
+    const percent = parseFloat(percentInput.value) || 0;
+    const rawOwner = ownerInput.value.trim();
+    const ownerKey = rawOwner.toLowerCase();
+    let value = (percent / 100) * revenue;
+
+    if (ownerKey === "split" && owners.length >= 2) {
+      const [first, second] = owners;
+      const half = value / 2;
+      ownerSums[first] = (ownerSums[first] || 0) + half;
+      ownerSums[second] = (ownerSums[second] || 0) + half;
+    } else {
+      ownerSums[rawOwner] = (ownerSums[rawOwner] || 0) + value;
+    }
+
+    row.cells[3].textContent = "$" + value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  });
+
+  const ownerTotals = document.getElementById('ownerTotals');
+  ownerTotals.innerHTML = '';
+  for (const [owner, total] of Object.entries(ownerSums)) {
+    const row = document.createElement('tr');
+    row.innerHTML = `<td>${owner}</td><td>$${total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>`;
+    ownerTotals.appendChild(row);
+  }
+}
+
+calculateBreakdown();
+</script>
+
+</body>
+</html>
